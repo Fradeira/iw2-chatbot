@@ -15,11 +15,20 @@ server.post('/api/messages', connector.listen());
 
 var bot = new builder.UniversalBot(connector, function (session) {
 
-    
-
     // bot.on('typing', function(){
     //     session.send(`haha, t'es en train d'ecrire :)`);
     // }) 
+
+    if (session.message.text === "doheavywork") {
+        //Effet "en train decrire"
+        session.sendTyping();
+        //Bim apres 3,7 secondes message
+        setTimeout(()  => {
+            session.send("Wait, i don't want work !!!");
+        }, 3700);
+    }
+
+    
     
 });
 
