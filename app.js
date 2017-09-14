@@ -19,6 +19,27 @@ var bot = new builder.UniversalBot(connector, function (session) {
     //     session.send(`haha, t'es en train d'ecrire :)`);
     // }) 
 
+    //New conversation > Ecrire un mot > New conversation > Done
+    bot.on('conversationUpdate', function (message) {
+        if (message.membersAdded && message.membersAdded.length > 0) {
+            //Definit un nouveau membre 
+            var membersAdded = message.membersAdded
+                .map(function (m) {
+                    var isSelf = m.id === message.address.bot.id;
+                    return (isSelf ? message.address.bot.name : m.name) || '' + ' (Id: ' + m.id + ')';
+                })
+                .join(', ');
+            
+            //Si cest le nouveau membre est un user bim ecrit
+            if (membersAdded == 'User') {
+                bot.send(new builder.Message()
+                    .address(message.address)
+                    .text('Welcome bro !')
+                );
+            }
+        }
+    })
+
     if (session.message.text === "doheavywork") {
         //Effet "en train decrire"
         session.sendTyping();
@@ -27,8 +48,6 @@ var bot = new builder.UniversalBot(connector, function (session) {
             session.send("Wait, i don't want work !!!");
         }, 3700);
     }
-
-    
     
 });
 
