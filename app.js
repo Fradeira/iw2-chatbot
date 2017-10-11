@@ -13,41 +13,41 @@ var connector = new builder.ChatConnector({
  
 server.post('/api/messages', connector.listen()); 
 
-var bot = new builder.UniversalBot(connector, function (session) {
-
-    // bot.on('typing', function(){
-    //     session.send(`haha, t'es en train d'ecrire :)`);
-    // }) 
-
-    //New conversation > Ecrire un mot > New conversation > Done
-    bot.on('conversationUpdate', function (message) {
-        if (message.membersAdded && message.membersAdded.length > 0) {
-            //Definit un nouveau membre 
-            var membersAdded = message.membersAdded
-                .map(function (m) {
-                    var isSelf = m.id === message.address.bot.id;
-                    return (isSelf ? message.address.bot.name : m.name) || '' + ' (Id: ' + m.id + ')';
-                })
-                .join(', ');
-            
-            //Si cest le nouveau membre est un user bim ecrit
-            if (membersAdded == 'User') {
-                bot.send(new builder.Message()
-                    .address(message.address)
-                    .text('Welcome bro !')
-                );
-            }
-        }
-    })
-
-    if (session.message.text === "doheavywork") {
-        //Effet "en train decrire"
-        session.sendTyping();
-        //Bim apres 3,7 secondes message
-        setTimeout(()  => {
-            session.send("Wait, i don't want work !!!");
-        }, 3700);
+var bot = new builder.UniversalBot(connector, [
+    function(session){
+        session.beginDialog('greetings');
     }
-    
-});
+]);
 
+bot.dialog('greetings',[
+    function(session){
+        session.beginDialog('askName');
+    },
+    function(session){
+        session.beginDialog('reservation');
+    }
+]);
+
+bot.dialog('askName',[
+    function(session){
+        builder.Prompts.text(session, 'Bienvenue dans le bot Resa, comment tu t\'apelle ?');
+    },
+    function(session, results){
+        session.endDialog('Bonjour %s!', results.response);
+     }
+]);
+
+bot.dialog('reservation',[
+    function(session){
+        builder.Prompts.text(session, 'Pour quelle date souhaitez vous reserver ?');
+    },
+    function(session){
+        builder.Prompts.text(session, 'Pour combien de personne ?');
+    },
+    function(session){
+        builder.Prompts.text(session, 'Au nom de qui ?');
+    },
+    function(session, results1){
+        session.endDialog('Votre resa : %s!', BotBuilder.Data.SessionState);
+    }
+]);
