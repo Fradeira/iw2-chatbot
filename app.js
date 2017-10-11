@@ -19,7 +19,7 @@ var bot = new builder.UniversalBot(connector, [
     }
 ]);
 
-bot.dialog('greetings',[
+bot.dialog('greetings', [
     function(session){
         session.beginDialog('askName');
     },
@@ -28,7 +28,7 @@ bot.dialog('greetings',[
     }
 ]);
 
-bot.dialog('askName',[
+bot.dialog('askName', [
     function(session){
         builder.Prompts.text(session, 'Bienvenue dans le bot Resa, comment tu t\'apelle ?');
     },
@@ -37,17 +37,37 @@ bot.dialog('askName',[
      }
 ]);
 
-bot.dialog('reservation',[
-    function(session){
-        builder.Prompts.text(session, 'Pour quelle date souhaitez vous reserver ?');
+bot.dialog('reservation', [
+    function (session) {
+        session.beginDialog('telMe');
     },
-    function(session){
-        builder.Prompts.text(session, 'Pour combien de personne ?');
+    function (session, results) {
+        session.send(`Voici votre réservation : <br/>
+        Date reservation : ${results.reservationDate} <br/>
+        Nombre de personne : ${results.numberPeople} <br/>
+        Au nom de : ${results.reservationName}`);
+    }
+]);
+
+bot.dialog('telMe', [
+    function (session) {
+        builder.Prompts.text(session, 'Pour quelle date souhaitez vous une reservation ?');
     },
-    function(session){
-        builder.Prompts.text(session, 'Au nom de qui ?');
+    function (session, results) {
+        session.dialogData.reservationDate = results.response;
+        builder.Prompts.number(session, 'Pour combien de personne ?');
     },
-    function(session, results1){
-        session.endDialog('Votre resa : %s!', BotBuilder.Data.SessionState);
+    function (session, results) {
+        session.dialogData.numberPeople = results.response;
+        builder.Prompts.text(session, 'A quel nom ?');
+    },
+    function (session, results) {
+        session.dialogData.reservationName = results.response;
+        var finalResults = {
+            reservationDate: session.dialogData.reservationDate,
+            numberPeople: session.dialogData.numberPeople,
+            reservationName: session.dialogData.reservationName
+        }
+        session.endDialogWithResult(finalResults);
     }
 ]);
