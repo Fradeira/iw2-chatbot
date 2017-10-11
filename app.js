@@ -73,8 +73,8 @@ bot.dialog('reservation', [
         session.send(`Voici votre reservation : <br/>
         Date reservation : ${results.reservationDate}<br/>
         Nombre de personne : ${results.numberPeople}<br/>
-        Au nom de : ${results.reservationTel}<br/>
-        Au telephone : ${results.reservationName}`);
+        Au nom de : ${results.reservationName}<br/>
+        Au telephone : ${results.reservationTel}`);
     }
 ])
 .cancelAction(
@@ -104,17 +104,39 @@ bot.dialog('telMe', [
         builder.Prompts.text(session, 'A quel nom ?');
     },
     function (session, results) {
-        session.dialogData.resaTel = results.response;
-        builder.Prompts.number(session, 'Quel est votre numero de telephone ?');
+        session.dialogData.resaName = results.response;
+        // builder.Prompts.number(session, 'Quel est votre numero de telephone ?');
+        session.beginDialog('phonePrompt');
     },
     function (session, results) {
-        session.dialogData.reservationName = results.response;
+        session.dialogData.reservationTel = results.response;
         var finalResults = {
             reservationDate: session.dialogData.reservationDate,
             numberPeople: session.dialogData.numberPeople,
-            reservationTel: session.dialogData.resaTel,
-            reservationName: session.dialogData.reservationName
+            reservationName: session.dialogData.resaName,
+            reservationTel: session.dialogData.reservationTel
         }
         session.endDialogWithResult(finalResults);
+    }
+]);
+
+bot.dialog('phonePrompt', [
+    function (session, args) {
+        if (args && args.reprompt) {
+            builder.Prompts.text(session, "Veuillez utiliser un bon format de numero.")
+        } else {
+            builder.Prompts.text(session, "Quel est le numero de tel ?");
+        }
+    },
+    function (session, results) {
+        var matched = results.response.match(/\d+/g);
+        var number = matched ? matched.join('') : '';
+        if (number.length == 10 || number.length == 11) {
+            session.userData.phoneNumber = number;
+            session.endDialogWithResult({ response: number });
+        } else {
+            // Repeat the dialog
+            session.replaceDialog('phonePrompt', { reprompt: true });
+        }
     }
 ]);
