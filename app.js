@@ -19,6 +19,15 @@ var bot = new builder.UniversalBot(connector, [
     }
 ]);
 
+var Menu = {
+    "Demander mon nom": {
+        item: "askName"
+    },
+    "Reserver":{
+        item: "reservation"
+    },
+}
+
 bot.dialog('greetings', [
     // function(session){
     //     session.beginDialog('askName');
@@ -27,16 +36,18 @@ bot.dialog('greetings', [
     //     session.beginDialog('reservation');
     // }
     function(session){
-        builder.Prompts.choice(session, "Bienvenue, que souhaitez-vous faire ? (tapez 1 ou 2)", "Demander mon nom|Reserver");
+        builder.Prompts.choice(session, "Bienvenue, que souhaitez-vous faire ? ", Menu);
     },
     function (session, results) {
-        if (results.response.index == 0) {
-            session.beginDialog('askName');
-        } else {
-            session.beginDialog('reservation');
+        if(results.response){
+            session.beginDialog(Menu[results.response.entity].item);
         }
     }
-]);
+])
+.triggerAction({
+    matches: /^main menu$/i,
+    confirmPrompt: 'Retourner au menu ?'
+});
 
 bot.dialog('askName', [
     function(session){
@@ -45,12 +56,19 @@ bot.dialog('askName', [
     function(session, results){
         session.endDialog('Bonjour %s!', results.response);
     },
-]);
+]).cancelAction(
+    "cancelname", "Tapez main menu pour continuer.",
+    {
+        matches: /^cancel$/i,
+        confirmPrompt: 'Retourner au menu ?'
+    }
+);
 
 bot.dialog('reservation', [
     function (session) {
         session.beginDialog('telMe');
     },
+    // Donnees utiles seulement pour la reservation et non pour le main menu
     function (session, results) {
         session.send(`Voici votre reservation : <br/>
         Date reservation : ${results.reservationDate}<br/>
@@ -58,7 +76,20 @@ bot.dialog('reservation', [
         Au nom de : ${results.reservationTel}<br/>
         Au telephone : ${results.reservationName}`);
     }
-]);
+])
+.cancelAction(
+    "cancelreservation", "Tapez main menu pour continuer.",
+    {
+        matches: /^cancel$/i,
+        confirmPrompt: 'Stopper tout ?'
+    }
+)
+.reloadAction(
+    "reloadreservation", "",
+    {
+        matches: /^reload$/i,
+    }
+)
 
 bot.dialog('telMe', [
     function (session) {
